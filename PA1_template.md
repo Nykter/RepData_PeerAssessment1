@@ -19,13 +19,14 @@ Through this report you can see that activities on weekdays mostly follow a work
 
 Load "knitr", "gridExtra", "ggplot2", "plyr" and "dplyr" packages. And set "echo", "results" and "tidy" as global options for knitr.
 
-```{r, message=FALSE}
+
+```r
 library(knitr)
 library(gridExtra)
 library(ggplot2)
 library(plyr)
 library(dplyr)
-opts_chunk$set(echo = TRUE, results = 'hold', tidy = TRUE)
+opts_chunk$set(echo = TRUE, results = "hold", tidy = TRUE)
 ```
 
 <br>
@@ -43,18 +44,20 @@ To load and preprocess the data, I proceed as follows:
       + Set column "date" as Date.
 4. Assign the result to the variable 'tbl'.
 
-```{r}
+
+```r
 read_data <- function() {
-      file_name = "activity.zip"
-      Url = "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
-      if(!file.exists(file_name)) {
-            download.file(Url, destfile = file_name)
-      }
-      csv_file <- unz(file_name, "activity.csv")
-      tbl <- read.csv(csv_file, header = T, colClasses = c("numeric", "character", "numeric"))
-      tbl$interval <- factor(tbl$interval)
-      tbl$date <- as.Date(tbl$date, format = "%Y-%m-%d")
-      tbl
+    file_name = "activity.zip"
+    Url = "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+    if (!file.exists(file_name)) {
+        download.file(Url, destfile = file_name)
+    }
+    csv_file <- unz(file_name, "activity.csv")
+    tbl <- read.csv(csv_file, header = T, colClasses = c("numeric", "character", 
+        "numeric"))
+    tbl$interval <- factor(tbl$interval)
+    tbl$date <- as.Date(tbl$date, format = "%Y-%m-%d")
+    tbl
 }
 tbl <- suppressWarnings(read_data())
 ```
@@ -74,28 +77,41 @@ For this part of the assignment, we can ignore the missing values (NA) in the da
 
 I make the aggregation of the steps by date using 'dplyr' and a histogram of the total number of steps taken each day using 'ggplot'. Plotted with a bin interval of 1000 steps.
 
-```{r,tidy=FALSE}
+
+```r
 day_total <- tbl %>%
             group_by(date) %>%
             summarise(total = sum(steps, na.rm = T))
 ```
 
-```{r,tidy=FALSE}
+
+```r
 ggplot(day_total, aes(x=total)) + 
       geom_histogram(aes(fill = ..count..), origin=0.1, binwidth=1000)
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
+
 <br>
 Finally, I calculate and report the mean and median total number of steps taken per day keeping in mind that NA's doesn't count for this calculation.
 
-```{r}
+
+```r
 day_total[day_total == 0] <- NA
 
 summary_total <- function(x) {
-      funs <- c("mean" = mean, "median" = median)
-      lapply(funs, function(f) f(x, na.rm = T))
+    funs <- c(mean = mean, median = median)
+    lapply(funs, function(f) f(x, na.rm = T))
 }
 summary_total(day_total$total)
+```
+
+```
+## $mean
+## [1] 10766.19
+## 
+## $median
+## [1] 10765
 ```
 
 The Mean is **10766.19** and the Median is **10765**.
@@ -106,7 +122,8 @@ The Mean is **10766.19** and the Median is **10765**.
 
 For this question I make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis). I do this grouping by interval and summarising the mean of the number of steps.
 
-```{r,tidy=FALSE}
+
+```r
 day_avg <- tbl %>%
             group_by(interval) %>%
             summarise(avg_steps = mean(steps, na.rm = T))
@@ -114,15 +131,26 @@ day_avg <- tbl %>%
 
 Then, I plot the result with 'ggplot' with the time series of the average number of steps taken.
 
-```{r,tidy=FALSE}
+
+```r
 ggplot(day_avg, aes(x = interval, y = avg_steps, group = 1)) + 
       geom_line() + scale_x_discrete(breaks = seq(0, 2500, 500))
 ```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+
 Now, I find the 5-minute interval which contains the maximum number of steps, realising that it coincides with the peak shown graphically.
 
-```{r}
+
+```r
 day_avg[which.max(day_avg$avg_steps), ]
+```
+
+```
+## Source: local data frame [1 x 2]
+## 
+##   interval avg_steps
+## 1      835  206.1698
 ```
 
 The **835th** 5-minute interval contains the maximum number of steps.
@@ -135,24 +163,31 @@ As there are a number of days/intervals where there are missing values (coded as
 
 To verify if this bias is produced, first I calculate and report the total number of missing values in the dataset.
 
-```{r}
+
+```r
 sum(is.na(tbl))
+```
+
+```
+## [1] 2304
 ```
 
 There are **2304** NA's (8 days of the data).
 
 Next, I fill in all of the missing values in the dataset using the mean for that 5-minute interval. I do this by binding a column with the means of steps per 5-minute interval and replacing every NA I find in an interval for its mean. Finally I subset the 3 original columns.
 
-```{r}
-tbl_noNA <- cbind(tbl,day_avg)
+
+```r
+tbl_noNA <- cbind(tbl, day_avg)
 tbl_noNA$steps[is.na(tbl_noNA$steps)] <- tbl_noNA$avg_steps[is.na(tbl_noNA$steps)]
-tbl_noNA <- tbl_noNA[,1:3]
+tbl_noNA <- tbl_noNA[, 1:3]
 ```
 
 Next, I make a histogram of the total number of steps taken each day as we did with the original data with NA's.
 I make the aggregation of the steps by date using 'dplyr' and a histogram of the total number of steps taken each day using 'ggplot'. Plotted with a bin interval of 1000 steps.
 
-```{r,tidy=FALSE}
+
+```r
 day_totalnoNA <- tbl_noNA %>%
             group_by(date) %>%
             summarise(total = sum(steps, na.rm = T))
@@ -160,7 +195,8 @@ day_totalnoNA <- tbl_noNA %>%
 
 I plot the original data and below the data with filled NA's to compare them.
 
-```{r,tidy=FALSE,fig.width=10,fig.height=4}
+
+```r
 g1 <- ggplot(day_total, aes(x = total)) + 
       geom_histogram(aes(fill = ..count..), origin=0.1, binwidth=1000) + 
       ylim(0,19) + xlab("original data with NA's")
@@ -170,14 +206,25 @@ g2 <- ggplot(day_totalnoNA, aes(x = total)) +
 grid.arrange(g1, g2, ncol = 2)
 ```
 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+
 Finally, I calculate and report the mean and median total number of steps taken per day. 
 
-```{r}
+
+```r
 summary_totalnoNA <- function(x) {
-      funs <- c("mean" = mean, "median" = median)
-      lapply(funs, function(f) f(x, na.rm = T))
+    funs <- c(mean = mean, median = median)
+    lapply(funs, function(f) f(x, na.rm = T))
 }
 summary_totalnoNA(day_totalnoNA$total)
+```
+
+```
+## $mean
+## [1] 10766.19
+## 
+## $median
+## [1] 10766.19
 ```
 
 Mean after populate missing values is **10766.19**. Median after populate missing values is **10766.19**.
@@ -199,7 +246,8 @@ For this part, using the dataset with the filled-in missing values, I create a n
 * Rename columns.
 * Bind both sets.
 
-```{r,tidy=FALSE}
+
+```r
 tbl_days <- tbl_noNA %>%
             mutate(type_of_day = as.factor(format(date,"%a")))
 
@@ -220,12 +268,15 @@ weekday_data <- rbind(weekday_avg, weekend_avg)
 
 Next, I make a graph containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-```{r,tidy=FALSE}
+
+```r
 ggplot(weekday_data, aes(x=interval, y=avg_steps, group=1)) + geom_line() + 
       scale_x_discrete(breaks=seq(0,2500,500)) + 
       facet_wrap(~ type_of_day, nrow=2) + 
       ylab("Number of steps")
 ```
+
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
 
 ### Conclusion
 
