@@ -193,7 +193,7 @@ day_totalnoNA <- tbl_noNA %>%
             summarise(total = sum(steps, na.rm = T))
 ```
 
-I plot the original data and below the data with filled NA's to compare them.
+I plot the original data and the data with filled NA's to compare them.
 
 
 ```r

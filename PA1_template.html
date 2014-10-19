@@ -380,7 +380,7 @@ I make the aggregation of the steps by date using &#39;dplyr&#39; and a histogra
             summarise(total = sum(steps, na.rm = T))
 </code></pre>
 
-<p>I plot the original data and below the data with filled NA&#39;s to compare them.</p>
+<p>I plot the original data and the data with filled NA&#39;s to compare them.</p>
 
 <pre><code class="r">g1 &lt;- ggplot(day_total, aes(x = total)) + 
       geom_histogram(aes(fill = ..count..), origin=0.1, binwidth=1000) + 
